@@ -18,8 +18,7 @@ define('KEYWORD_BLOCK_MAX_ITEMS', 100);
 define('KEYWORD_BLOCK_CACHE_DAYS', 2);
 
 import('lib.pkp.classes.plugins.BlockPlugin');
-import('classes.submission.SubmissionDAO');
-import('classes.publication.PublicationDAO');
+
 
 
 class KeywordCloudBlockPlugin extends BlockPlugin {
@@ -80,14 +79,16 @@ class KeywordCloudBlockPlugin extends BlockPlugin {
 	function _cacheMiss($cache, $id) {
 
 		//Get all published Articles of this Journal
-		$PublicationDao = DAORegistry::getDAO('PublicationDAO');
-		$publication = $PublicationDao->getPublicationById($cache->getCacheId(), $rangeInfo = null, $reverse = true);
-		var_dump($Publication);
+		//submissionDao = publishedArticleDao(100% certeza)
+		$submissionDao = DAORegistry::getDAO('SubmissionDAO');
+		$submissions =& $submissionDao->getByJournalId($journal->getId());
+		//submissions = publishedArticles(100% certeza)
+		var_dump($submissions);
 		//Get all IDs of the published Articles
 		$submissionKeywordDao = DAORegistry::getDAO('SubmissionKeywordDAO');
 		//Get all Keywords from all published articles of this journal
 		$all_keywords = array();
-		while ($publication = $publications) {
+		while ($submission = $submissions->next()) {
 			$submission_keywords = $submissionKeywordDao->getKeywords($publishedSubmission->getId(),
 				array(AppLocale::getLocale()))[AppLocale::getLocale()];
 			$all_keywords = array_merge($all_keywords, $submission_keywords);
