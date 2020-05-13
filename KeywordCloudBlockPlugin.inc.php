@@ -20,8 +20,6 @@ define('KEYWORD_BLOCK_CACHE_DAYS', 2);
 import('lib.pkp.classes.plugins.BlockPlugin');
 import ('classes.submission.SubmissionDAO');
 
-
-
 class KeywordCloudBlockPlugin extends BlockPlugin {
 	/**
 	 * Install default settings on journal creation.
@@ -72,29 +70,25 @@ class KeywordCloudBlockPlugin extends BlockPlugin {
 		$templateMgr->addJavaScript('d3.layout.cloud','https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.0.0/d3.layout.cloud.min.js');
 		$templateMgr->addJavaScript('d3.wordcloud',$this->getJavaScriptURL($request).'d3.wordcloud.min.js');
 
-
 		$templateMgr->assign('keywords', $keywords);
 		return parent::getContents($templateMgr, $request);
 	}
 	
-	function _cacheMiss($cache, $id) {
-
-		//Get all published Articles of this Journal
-		$SubmissionDAO = DAORegistry::getDAO('SubmissionDAO');
+	function _cacheMiss($cache, $id){
+		
+		$submissionKeywordDao = DAORegistry::getDAO('SubmissionKeywordDAO');
 		
 		//Get all IDs of the published Articles
-		import('classes.submission.Submission');
-		$submission =  Services::get('submission')->getMany([
-			'cache' => $cache->getCacheId(),
+		$submissionsIterator = Services::get('submission')->getMany([
+			'contextId' => $cache->getCacheId(),
 			'status' => STATUS_PUBLISHED,
 		]);
 		
-		$submissionKeywordDao = DAORegistry::getDAO('SubmissionKeywordDAO');
 		//Get all Keywords from all published articles of this journal
 		$all_keywords = array();
-		while ($submission = $submissions->next()) {
-			$submission_keywords = $submissionKeywordDao->getKeywords($submission->getId(),
-				array(AppLocale::getLocale()))[AppLocale::getLocale()];
+		foreach ($submissionsIterator as $submission) {
+			$articleId = $submission->getId();
+			$submission_keywords = $submissionKeywordDao->getKeywords($articleId, array(AppLocale::getLocale()));
 			$all_keywords = array_merge($all_keywords, $submission_keywords);
 		}
 
@@ -109,7 +103,7 @@ class KeywordCloudBlockPlugin extends BlockPlugin {
 		$top_keywords = array_slice($count_keywords, 0, KEYWORD_BLOCK_MAX_ITEMS);
 		
 		$keywords = array();
-
+		
 
 		foreach ($top_keywords as $k => $c) {
 			$kw = new stdClass();
